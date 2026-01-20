@@ -2,20 +2,17 @@
 
 // Re-export GPUI essentials
 pub use gpui::{
-    div, px, point, size, bounds, hsla, rgb, rgba,
-    App, AppContext, WindowContext, Context,
-    IntoElement, RenderOnce, Render, Styled,
-    SharedString, AnyElement, ElementId,
-    Div, Pixels, Hsla, BoxShadow,
-    Window, WindowOptions, WindowBounds, Bounds,
-    TitlebarOptions,
+    bounds, div, hsla, point, px, rgb, rgba, size, AnyElement, App, AppContext, Bounds, BoxShadow,
+    Context, Div, ElementId, Hsla, IntoElement, Pixels, Render, RenderOnce, SharedString, Styled,
+    TitlebarOptions, Window, WindowBounds, WindowOptions,
 };
 
 // Re-export our modules
-pub use crate::theme::{Theme, ThemeColors, ThemeRegistry, ActiveTheme};
+pub use crate::accessibility::{AccessibilityProps, Accessible, AriaRole};
+pub use crate::color::Color;
 pub use crate::icons::{Icon, IconSize};
 pub use crate::styled_ext::StyledExt;
-pub use crate::accessibility::{Accessible, AccessibilityProps, AriaRole};
+pub use crate::theme::{ActiveTheme, Theme, ThemeColors, ThemeRegistry};
 
 // Re-export components
 pub use crate::components::*;

@@ -1,8 +1,9 @@
 // Core modules
-pub mod theme;
-pub mod icons;
 pub mod accessibility;
+pub mod color;
+pub mod icons;
 pub mod styled_ext;
+pub mod theme;
 
 // Component modules
 pub mod components;

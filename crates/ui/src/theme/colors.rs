@@ -1,73 +1,57 @@
 // crates/ui/src/theme/colors.rs
 
-use gpui::{hsla, Hsla};
-
-/// Parse HSL string "hue saturation% lightness%" to Hsla
-pub fn parse_hsl(hsl_str: &str) -> Hsla {
-    let parts: Vec<&str> = hsl_str.split_whitespace().collect();
-
-    if parts.len() != 3 {
-        eprintln!("Invalid HSL format: {}, using fallback", hsl_str);
-        return hsla(0.0, 0.0, 0.0, 1.0);
-    }
-
-    let hue: f32 = parts[0].parse().unwrap_or(0.0) / 360.0;
-    let saturation: f32 = parts[1].trim_end_matches('%').parse().unwrap_or(0.0) / 100.0;
-    let lightness: f32 = parts[2].trim_end_matches('%').parse().unwrap_or(0.0) / 100.0;
-
-    hsla(hue, saturation, lightness, 1.0)
-}
+use crate::color::Color;
 
 #[derive(Debug, Clone)]
 pub struct ThemeColors {
     // Base
-    pub background: Hsla,
-    pub foreground: Hsla,
+    pub background: Color,
+    pub foreground: Color,
 
     // Primary
-    pub primary: Hsla,
-    pub primary_foreground: Hsla,
+    pub primary: Color,
+    pub primary_foreground: Color,
 
     // Secondary
-    pub secondary: Hsla,
-    pub secondary_foreground: Hsla,
+    pub secondary: Color,
+    pub secondary_foreground: Color,
 
     // Muted
-    pub muted: Hsla,
-    pub muted_foreground: Hsla,
+    pub muted: Color,
+    pub muted_foreground: Color,
 
     // Accent
-    pub accent: Hsla,
-    pub accent_foreground: Hsla,
+    pub accent: Color,
+    pub accent_foreground: Color,
 
     // Destructive
-    pub destructive: Hsla,
-    pub destructive_foreground: Hsla,
+    pub destructive: Color,
+    pub destructive_foreground: Color,
 
     // Borders
-    pub border: Hsla,
-    pub input: Hsla,
-    pub ring: Hsla,
+    pub border: Color,
+    pub input: Color,
+    pub ring: Color,
 }
 
 impl ThemeColors {
     pub fn from_config(config: &super::types::ThemeColorsConfig) -> Self {
         Self {
-            background: parse_hsl(&config.background),
-            foreground: parse_hsl(&config.foreground),
-            primary: parse_hsl(&config.primary),
-            primary_foreground: parse_hsl(&config.primary_foreground),
-            secondary: parse_hsl(&config.secondary),
-            secondary_foreground: parse_hsl(&config.secondary_foreground),
-            muted: parse_hsl(&config.muted),
-            muted_foreground: parse_hsl(&config.muted_foreground),
-            accent: parse_hsl(&config.accent),
-            accent_foreground: parse_hsl(&config.accent_foreground),
-            destructive: parse_hsl(&config.destructive),
-            destructive_foreground: parse_hsl(&config.destructive_foreground),
-            border: parse_hsl(&config.border),
-            input: parse_hsl(&config.input),
-            ring: parse_hsl(&config.ring),
+            background: Color::parse_hsl(&config.background),
+            foreground: Color::parse_hsl(&config.foreground),
+            primary: Color::parse_hsl(&config.primary),
+            primary_foreground: Color::parse_hsl(&config.primary_foreground),
+            secondary: Color::parse_hsl(&config.secondary),
+            secondary_foreground: Color::parse_hsl(&config.secondary_foreground),
+            muted: Color::parse_hsl(&config.muted),
+            muted_foreground: Color::parse_hsl(&config.muted_foreground),
+            accent: Color::parse_hsl(&config.accent),
+            accent_foreground: Color::parse_hsl(&config.accent_foreground),
+            destructive: Color::parse_hsl(&config.destructive),
+            destructive_foreground: Color::parse_hsl(&config.destructive_foreground),
+            border: Color::parse_hsl(&config.border),
+            input: Color::parse_hsl(&config.input),
+            ring: Color::parse_hsl(&config.ring),
         }
     }
 }
@@ -77,14 +61,29 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_parse_hsl() {
-        let color = parse_hsl("222 47% 11%");
-        // hue: 222/360 = 0.617
-        // sat: 47% = 0.47
-        // light: 11% = 0.11
-        assert!((color.h - 0.617).abs() < 0.01);
-        assert!((color.s - 0.47).abs() < 0.01);
-        assert!((color.l - 0.11).abs() < 0.01);
-        assert_eq!(color.a, 1.0);
+    fn test_theme_colors_from_config() {
+        let config = super::super::types::ThemeColorsConfig {
+            background: "0 0% 100%".to_string(),
+            foreground: "222 84% 5%".to_string(),
+            primary: "222 47% 11%".to_string(),
+            primary_foreground: "210 40% 98%".to_string(),
+            secondary: "210 40% 96%".to_string(),
+            secondary_foreground: "222 47% 11%".to_string(),
+            muted: "210 40% 96%".to_string(),
+            muted_foreground: "215 16% 47%".to_string(),
+            accent: "210 40% 96%".to_string(),
+            accent_foreground: "222 47% 11%".to_string(),
+            destructive: "0 84% 60%".to_string(),
+            destructive_foreground: "210 40% 98%".to_string(),
+            border: "214 32% 91%".to_string(),
+            input: "214 32% 91%".to_string(),
+            ring: "222 84% 5%".to_string(),
+        };
+
+        let colors = ThemeColors::from_config(&config);
+
+        // Verify background is white (100% lightness)
+        let bg_hsla = colors.background.to_hsla();
+        assert!((bg_hsla.l - 1.0).abs() < 0.01);
     }
 }
