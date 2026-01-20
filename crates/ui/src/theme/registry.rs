@@ -1,6 +1,7 @@
 // crates/ui/src/theme/registry.rs
 
 use super::{Theme, ThemeConfig, ThemeMode};
+use gpui::AppContext;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
@@ -113,10 +114,7 @@ pub trait ActiveTheme {
     fn theme(&self) -> Theme;
 }
 
-impl<T> ActiveTheme for T
-where
-    T: gpui::Context,
-{
+impl<T: AppContext> ActiveTheme for T {
     fn theme(&self) -> Theme {
         ThemeRegistry::get_active()
     }

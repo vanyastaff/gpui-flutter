@@ -1,6 +1,5 @@
 // crates/ui/src/theme/types.rs
 
-use gpui::{px, Hsla, Pixels};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

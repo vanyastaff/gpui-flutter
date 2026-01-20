@@ -1,6 +1,6 @@
 // crates/ui/src/color.rs
 
-use gpui::{hsla, rgba, Hsla, Rgba};
+use gpui::{hsla, Hsla, Rgba};
 use std::str::FromStr;
 
 /// Flutter-style Color type that can be created from multiple formats
@@ -21,7 +21,12 @@ impl Color {
     /// let red = Color::from_rgba(255, 0, 0, 1.0);
     /// ```
     pub fn from_rgba(r: u8, g: u8, b: u8, a: f32) -> Self {
-        let rgba_val = rgba(r as f32 / 255.0, g as f32 / 255.0, b as f32 / 255.0, a);
+        let rgba_val = Rgba {
+            r: r as f32 / 255.0,
+            g: g as f32 / 255.0,
+            b: b as f32 / 255.0,
+            a,
+        };
         Self {
             inner: Hsla::from(rgba_val),
         }

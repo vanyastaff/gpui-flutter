@@ -3,7 +3,7 @@
 // Re-export GPUI essentials
 pub use gpui::{
     bounds, div, hsla, point, px, rgb, rgba, size, AnyElement, App, AppContext, Bounds, BoxShadow,
-    Context, Div, ElementId, Hsla, IntoElement, Pixels, Render, RenderOnce, SharedString, Styled,
+    Div, ElementId, Hsla, IntoElement, Pixels, Render, RenderOnce, SharedString, Styled,
     TitlebarOptions, Window, WindowBounds, WindowOptions,
 };
 

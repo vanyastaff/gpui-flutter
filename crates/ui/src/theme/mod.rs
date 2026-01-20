@@ -8,7 +8,7 @@ pub use colors::ThemeColors;
 pub use registry::{ActiveTheme, ThemeRegistry};
 pub use types::*;
 
-use gpui::{px, Context, Pixels};
+use gpui::{px, Pixels};
 
 /// The main Theme struct used at runtime
 #[derive(Debug, Clone)]
@@ -112,10 +112,10 @@ impl Theme {
 }
 
 /// Initialize theme system
-pub fn init<C: Context>(_cx: &mut C) {
+pub fn init() {
     // Load default themes
-    let light_theme = include_str!("../themes/default-light.json");
-    let dark_theme = include_str!("../themes/default-dark.json");
+    let light_theme = include_str!("../../themes/default-light.json");
+    let dark_theme = include_str!("../../themes/default-dark.json");
 
     ThemeRegistry::register_from_json(light_theme).expect("Failed to load default light theme");
     ThemeRegistry::register_from_json(dark_theme).expect("Failed to load default dark theme");

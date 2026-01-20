@@ -71,7 +71,7 @@ impl Icon {
 }
 
 impl RenderOnce for Icon {
-    fn render(self, cx: &mut WindowContext) -> impl IntoElement {
+    fn render(self, _window: &mut Window, cx: &mut App) -> impl IntoElement {
         let theme = cx.theme();
         let color = self.color.unwrap_or(theme.colors.foreground.into());
         let size = self.size.to_pixels();
