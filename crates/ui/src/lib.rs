@@ -5,6 +5,9 @@ pub mod icons;
 pub mod styled_ext;
 pub mod theme;
 
+// Layout primitives
+pub mod layout;
+
 // Component modules
 pub mod components;
 

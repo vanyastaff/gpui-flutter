@@ -14,5 +14,8 @@ pub use crate::icons::{Icon, IconSize};
 pub use crate::styled_ext::StyledExt;
 pub use crate::theme::{ActiveTheme, Theme, ThemeColors, ThemeRegistry};
 
+// Re-export layout primitives
+pub use crate::layout::*;
+
 // Re-export components
 pub use crate::components::*;
