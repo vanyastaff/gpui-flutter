@@ -101,6 +101,116 @@ impl Color {
         Self::from_hsl(hue, saturation, lightness)
     }
 
+    /// Try to parse a color string (supports #hex, hsl(), rgb(), named colors)
+    ///
+    /// # Example
+    /// ```
+    /// let red = Color::try_parse("#ff0000").unwrap();
+    /// let blue = Color::try_parse("hsl(240, 100%, 50%)").unwrap();
+    /// let green = Color::try_parse("green").unwrap();
+    /// ```
+    pub fn try_parse(s: &str) -> Result<Self, ColorParseError> {
+        let s = s.trim();
+
+        // Hex color: #RRGGBB or #RGB
+        if s.starts_with('#') {
+            return Self::parse_hex_string(&s[1..]);
+        }
+
+        // HSL format: hsl(h, s%, l%) or h s% l%
+        if s.starts_with("hsl(") || s.contains('%') {
+            return Self::parse_hsl_function(s);
+        }
+
+        // RGB format: rgb(r, g, b)
+        if s.starts_with("rgb(") {
+            return Self::parse_rgb_function(s);
+        }
+
+        // Named color
+        Self::parse_named_color(s)
+    }
+
+    /// Parse hex string (without #)
+    fn parse_hex_string(hex: &str) -> Result<Self, ColorParseError> {
+        let hex = hex.trim();
+
+        // #RGB -> #RRGGBB
+        let expanded = if hex.len() == 3 {
+            hex.chars()
+                .map(|c| format!("{}{}", c, c))
+                .collect::<String>()
+        } else {
+            hex.to_string()
+        };
+
+        if expanded.len() != 6 && expanded.len() != 8 {
+            return Err(ColorParseError::InvalidFormat);
+        }
+
+        let value = u32::from_str_radix(&expanded, 16).map_err(|_| ColorParseError::InvalidHex)?;
+
+        Ok(if expanded.len() == 8 {
+            Self::from_argb(value)
+        } else {
+            Self::from_hex(value)
+        })
+    }
+
+    /// Parse hsl() function format
+    fn parse_hsl_function(s: &str) -> Result<Self, ColorParseError> {
+        let s = s
+            .trim()
+            .trim_start_matches("hsl(")
+            .trim_end_matches(')')
+            .replace(',', " ");
+
+        Ok(Self::parse_hsl(&s))
+    }
+
+    /// Parse rgb() function format
+    fn parse_rgb_function(s: &str) -> Result<Self, ColorParseError> {
+        let inner = s.trim().trim_start_matches("rgb(").trim_end_matches(')');
+
+        let parts: Vec<&str> = inner.split(',').map(|s| s.trim()).collect();
+        if parts.len() != 3 {
+            return Err(ColorParseError::InvalidFormat);
+        }
+
+        let r: u8 = parts[0]
+            .parse()
+            .map_err(|_| ColorParseError::InvalidNumber)?;
+        let g: u8 = parts[1]
+            .parse()
+            .map_err(|_| ColorParseError::InvalidNumber)?;
+        let b: u8 = parts[2]
+            .parse()
+            .map_err(|_| ColorParseError::InvalidNumber)?;
+
+        Ok(Self::rgb(r, g, b))
+    }
+
+    /// Parse named color
+    fn parse_named_color(name: &str) -> Result<Self, ColorParseError> {
+        match name.to_lowercase().as_str() {
+            "transparent" => Ok(Self::transparent()),
+            "black" => Ok(Self::black()),
+            "white" => Ok(Self::white()),
+            "red" => Ok(Self::red()),
+            "blue" => Ok(Self::blue()),
+            "green" => Ok(Self::green()),
+            "yellow" => Ok(Self::yellow()),
+            "orange" => Ok(Self::orange()),
+            "purple" => Ok(Self::purple()),
+            "pink" => Ok(Self::pink()),
+            "grey" | "gray" => Ok(Self::grey()),
+            "cyan" => Ok(Self::cyan()),
+            "teal" => Ok(Self::teal()),
+            "amber" => Ok(Self::amber()),
+            _ => Err(ColorParseError::UnknownColor),
+        }
+    }
+
     // ============================================
     // Named Colors (Material Design palette)
     // ============================================
@@ -377,6 +487,41 @@ impl Color {
         self
     }
 
+    /// Saturate the color by a percentage (0.0-1.0)
+    pub fn saturate(mut self, amount: f32) -> Self {
+        self.inner.s = (self.inner.s + amount).min(1.0);
+        self
+    }
+
+    /// Desaturate the color by a percentage (0.0-1.0)
+    pub fn desaturate(mut self, amount: f32) -> Self {
+        self.inner.s = (self.inner.s - amount).max(0.0);
+        self
+    }
+
+    /// Adjust hue by degrees (-360 to 360)
+    pub fn rotate_hue(mut self, degrees: f32) -> Self {
+        self.inner.h = (self.inner.h + degrees / 360.0) % 1.0;
+        if self.inner.h < 0.0 {
+            self.inner.h += 1.0;
+        }
+        self
+    }
+
+    /// Mix this color with another color
+    pub fn mix(self, other: Color, ratio: f32) -> Self {
+        let ratio = ratio.clamp(0.0, 1.0);
+        let self_rgba = self.to_rgba();
+        let other_rgba = other.to_rgba();
+
+        Self::from_rgba(
+            ((self_rgba.r * (1.0 - ratio) + other_rgba.r * ratio) * 255.0) as u8,
+            ((self_rgba.g * (1.0 - ratio) + other_rgba.g * ratio) * 255.0) as u8,
+            ((self_rgba.b * (1.0 - ratio) + other_rgba.b * ratio) * 255.0) as u8,
+            self_rgba.a * (1.0 - ratio) + other_rgba.a * ratio,
+        )
+    }
+
     // ============================================
     // Conversions to GPUI types
     // ============================================
@@ -390,7 +535,64 @@ impl Color {
     pub fn to_rgba(&self) -> Rgba {
         Rgba::from(self.inner)
     }
+
+    /// Convert to hex string (without #)
+    pub fn to_hex_string(&self) -> String {
+        let rgba = self.to_rgba();
+        format!(
+            "{:02x}{:02x}{:02x}",
+            (rgba.r * 255.0) as u8,
+            (rgba.g * 255.0) as u8,
+            (rgba.b * 255.0) as u8
+        )
+    }
+
+    /// Convert to CSS rgb() string
+    pub fn to_css_rgb(&self) -> String {
+        let rgba = self.to_rgba();
+        format!(
+            "rgb({}, {}, {})",
+            (rgba.r * 255.0) as u8,
+            (rgba.g * 255.0) as u8,
+            (rgba.b * 255.0) as u8
+        )
+    }
+
+    /// Convert to CSS hsl() string
+    pub fn to_css_hsl(&self) -> String {
+        format!(
+            "hsl({:.0}, {:.0}%, {:.0}%)",
+            self.inner.h * 360.0,
+            self.inner.s * 100.0,
+            self.inner.l * 100.0
+        )
+    }
 }
+
+// ============================================
+// Error types
+// ============================================
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ColorParseError {
+    InvalidFormat,
+    InvalidHex,
+    InvalidNumber,
+    UnknownColor,
+}
+
+impl std::fmt::Display for ColorParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ColorParseError::InvalidFormat => write!(f, "Invalid color format"),
+            ColorParseError::InvalidHex => write!(f, "Invalid hex color"),
+            ColorParseError::InvalidNumber => write!(f, "Invalid number in color"),
+            ColorParseError::UnknownColor => write!(f, "Unknown color name"),
+        }
+    }
+}
+
+impl std::error::Error for ColorParseError {}
 
 // ============================================
 // Trait implementations for easy conversion
@@ -426,6 +628,48 @@ impl From<Rgba> for Color {
 impl From<&Color> for Hsla {
     fn from(color: &Color) -> Self {
         color.inner
+    }
+}
+
+// String conversions
+impl From<String> for Color {
+    fn from(s: String) -> Self {
+        Self::try_parse(&s).unwrap_or_else(|_| {
+            eprintln!("Failed to parse color '{}', using black", s);
+            Self::black()
+        })
+    }
+}
+
+impl From<&str> for Color {
+    fn from(s: &str) -> Self {
+        Self::try_parse(s).unwrap_or_else(|_| {
+            eprintln!("Failed to parse color '{}', using black", s);
+            Self::black()
+        })
+    }
+}
+
+impl TryFrom<String> for Color {
+    type Error = ColorParseError;
+
+    fn try_from(s: String) -> Result<Self, Self::Error> {
+        Self::try_parse(&s)
+    }
+}
+
+impl TryFrom<&str> for Color {
+    type Error = ColorParseError;
+
+    fn try_from(s: &str) -> Result<Self, Self::Error> {
+        Self::try_parse(s)
+    }
+}
+
+// Display trait for debugging
+impl std::fmt::Display for Color {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "#{}", self.to_hex_string())
     }
 }
 
@@ -488,5 +732,62 @@ mod tests {
         assert!((hsla.s - 0.47).abs() < 0.01);
         assert!((hsla.l - 0.11).abs() < 0.01);
         assert_eq!(hsla.a, 1.0);
+    }
+
+    #[test]
+    fn test_parse_hex_string() {
+        let red = Color::try_parse("#ff0000").unwrap();
+        let rgba = red.to_rgba();
+        assert!((rgba.r - 1.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_parse_short_hex() {
+        let red = Color::try_parse("#f00").unwrap();
+        let rgba = red.to_rgba();
+        assert!((rgba.r - 1.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_parse_rgb_function() {
+        let red = Color::try_parse("rgb(255, 0, 0)").unwrap();
+        let rgba = red.to_rgba();
+        assert!((rgba.r - 1.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_parse_named_color() {
+        let red = Color::try_parse("red").unwrap();
+        assert_eq!(red, Color::red());
+    }
+
+    #[test]
+    fn test_from_string() {
+        let red: Color = "#ff0000".into();
+        let rgba = red.to_rgba();
+        assert!((rgba.r - 1.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_mix_colors() {
+        let red = Color::red();
+        let blue = Color::blue();
+        let purple = red.mix(blue, 0.5);
+
+        // Mixed color should be different from both
+        assert_ne!(purple, red);
+        assert_ne!(purple, blue);
+    }
+
+    #[test]
+    fn test_color_modifiers() {
+        let color = Color::blue();
+        let darker = color.darken(0.2);
+        let lighter = color.lighten(0.2);
+        let saturated = color.saturate(0.1);
+
+        assert_ne!(color, darker);
+        assert_ne!(color, lighter);
+        assert_ne!(color, saturated);
     }
 }
