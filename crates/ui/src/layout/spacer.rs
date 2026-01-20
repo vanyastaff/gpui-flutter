@@ -27,6 +27,12 @@ impl Default for Spacer {
 
 impl RenderOnce for Spacer {
     fn render(self, _window: &mut Window, _cx: &mut App) -> impl IntoElement {
-        div().flex_grow().flex_shrink_0()
+        let mut element = div();
+
+        // Set flex-grow value directly via style()
+        element.style().flex_grow = Some(self.flex as f32);
+        element.style().flex_shrink = Some(0.0);
+
+        element
     }
 }
