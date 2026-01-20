@@ -7,12 +7,29 @@ mod padding;
 mod sized_box;
 mod spacer;
 
-pub use align::{Align, Alignment};
+pub use align::Align;
 pub use center::Center;
-pub use flexible::{Expanded, FlexFit, Flexible};
+pub use flexible::{Expanded, Flexible};
 pub use padding::Padding;
 pub use sized_box::SizedBox;
 pub use spacer::Spacer;
+
+/// High-level alignment enum for positioning elements (Flutter-style)
+///
+/// This is a semantic wrapper over GPUI's flexbox alignment primitives,
+/// combining justify_content and align_items for common positioning patterns.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Alignment {
+    TopLeft,
+    TopCenter,
+    TopRight,
+    CenterLeft,
+    Center,
+    CenterRight,
+    BottomLeft,
+    BottomCenter,
+    BottomRight,
+}
 
 /// Determines how a flex child should fit within its allocated space
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

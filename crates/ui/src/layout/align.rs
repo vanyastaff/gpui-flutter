@@ -1,5 +1,6 @@
 // crates/ui/src/layout/align.rs
 
+use super::Alignment;
 use gpui::*;
 
 /// Flutter-style Align widget
@@ -7,19 +8,6 @@ use gpui::*;
 pub struct Align {
     child: AnyElement,
     alignment: Alignment,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Alignment {
-    TopLeft,
-    TopCenter,
-    TopRight,
-    CenterLeft,
-    Center,
-    CenterRight,
-    BottomLeft,
-    BottomCenter,
-    BottomRight,
 }
 
 impl Align {
