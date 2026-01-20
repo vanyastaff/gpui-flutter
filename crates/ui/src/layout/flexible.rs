@@ -1,5 +1,6 @@
 // crates/ui/src/layout/flexible.rs
 
+use super::FlexFit;
 use gpui::*;
 
 /// Flutter-style Flexible widget
@@ -8,14 +9,6 @@ pub struct Flexible {
     child: AnyElement,
     flex: u32,
     fit: FlexFit,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum FlexFit {
-    /// Child can be smaller than flex space
-    Loose,
-    /// Child must fill all flex space
-    Tight,
 }
 
 impl Flexible {
