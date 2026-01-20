@@ -1,5 +1,4 @@
 // crates/ui/src/theme/registry.rs
-// Placeholder - will be implemented in Task 4
 
 use super::{Theme, ThemeConfig, ThemeMode};
 use std::collections::HashMap;
@@ -25,16 +24,61 @@ impl ThemeRegistryInner {
 pub struct ThemeRegistry;
 
 impl ThemeRegistry {
+    /// Register a theme from JSON string
+    pub fn register_from_json(json: &str) -> anyhow::Result<()> {
+        let config: ThemeConfig = serde_json::from_str(json)?;
+        let theme = Theme::from_config(config);
+        let name = theme.name.clone();
+
+        let mut registry = THEME_REGISTRY.write().unwrap();
+        registry.themes.insert(name.clone(), theme);
+
+        // Set as active if first theme
+        if registry.active_theme_name.is_empty() {
+            registry.active_theme_name = name;
+        }
+
+        Ok(())
+    }
+
+    /// Set active theme by name
+    pub fn set_active(name: &str) -> bool {
+        let mut registry = THEME_REGISTRY.write().unwrap();
+        if registry.themes.contains_key(name) {
+            registry.active_theme_name = name.to_string();
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Get active theme
     pub fn get_active() -> Theme {
         let registry = THEME_REGISTRY.read().unwrap();
         registry
             .themes
             .get(&registry.active_theme_name)
             .cloned()
-            .unwrap_or_else(|| Self::create_fallback_theme())
+            .unwrap_or_else(|| {
+                // Fallback theme
+                Self::create_fallback_theme()
+            })
+    }
+
+    /// Get theme by name
+    pub fn get(name: &str) -> Option<Theme> {
+        let registry = THEME_REGISTRY.read().unwrap();
+        registry.themes.get(name).cloned()
+    }
+
+    /// List all theme names
+    pub fn list_themes() -> Vec<String> {
+        let registry = THEME_REGISTRY.read().unwrap();
+        registry.themes.keys().cloned().collect()
     }
 
     fn create_fallback_theme() -> Theme {
+        // Minimal fallback theme
         let config = ThemeConfig {
             name: "fallback".to_string(),
             mode: ThemeMode::Light,
@@ -64,6 +108,7 @@ impl ThemeRegistry {
     }
 }
 
+/// Trait to get theme from context
 pub trait ActiveTheme {
     fn theme(&self) -> Theme;
 }

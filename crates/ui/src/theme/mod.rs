@@ -113,5 +113,10 @@ impl Theme {
 
 /// Initialize theme system
 pub fn init<C: Context>(_cx: &mut C) {
-    // Initialization logic if needed
+    // Load default themes
+    let light_theme = include_str!("../themes/default-light.json");
+    let dark_theme = include_str!("../themes/default-dark.json");
+
+    ThemeRegistry::register_from_json(light_theme).expect("Failed to load default light theme");
+    ThemeRegistry::register_from_json(dark_theme).expect("Failed to load default dark theme");
 }

@@ -1,0 +1,49 @@
+{
+  "name": "default-dark",
+  "mode": "dark",
+  "colors": {
+    "background": "222 84% 5%",
+    "foreground": "210 40% 98%",
+    "primary": "210 40% 98%",
+    "primary_foreground": "222 47% 11%",
+    "secondary": "217 33% 17%",
+    "secondary_foreground": "210 40% 98%",
+    "muted": "217 33% 17%",
+    "muted_foreground": "215 20% 65%",
+    "accent": "217 33% 17%",
+    "accent_foreground": "210 40% 98%",
+    "destructive": "0 63% 31%",
+    "destructive_foreground": "210 40% 98%",
+    "border": "217 33% 17%",
+    "input": "217 33% 17%",
+    "ring": "212 93% 87%"
+  },
+  "radius": {
+    "sm": 4.0,
+    "md": 8.0,
+    "lg": 12.0,
+    "full": 9999.0
+  },
+  "spacing": {
+    "xs": 4.0,
+    "sm": 8.0,
+    "md": 16.0,
+    "lg": 24.0,
+    "xl": 32.0,
+    "xxl": 48.0
+  },
+  "typography": {
+    "font_family": "system-ui, -apple-system, sans-serif",
+    "font_mono": "ui-monospace, monospace",
+    "size_xs": 12.0,
+    "size_sm": 14.0,
+    "size_base": 16.0,
+    "size_lg": 18.0,
+    "size_xl": 20.0,
+    "size_2xl": 24.0,
+    "weight_normal": 400,
+    "weight_medium": 500,
+    "weight_semibold": 600,
+    "weight_bold": 700
+  }
+}
