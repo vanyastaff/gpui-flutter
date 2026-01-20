@@ -37,21 +37,21 @@ pub struct ThemeColors {
 impl ThemeColors {
     pub fn from_config(config: &super::types::ThemeColorsConfig) -> Self {
         Self {
-            background: Color::parse_hsl(&config.background),
-            foreground: Color::parse_hsl(&config.foreground),
-            primary: Color::parse_hsl(&config.primary),
-            primary_foreground: Color::parse_hsl(&config.primary_foreground),
-            secondary: Color::parse_hsl(&config.secondary),
-            secondary_foreground: Color::parse_hsl(&config.secondary_foreground),
-            muted: Color::parse_hsl(&config.muted),
-            muted_foreground: Color::parse_hsl(&config.muted_foreground),
-            accent: Color::parse_hsl(&config.accent),
-            accent_foreground: Color::parse_hsl(&config.accent_foreground),
-            destructive: Color::parse_hsl(&config.destructive),
-            destructive_foreground: Color::parse_hsl(&config.destructive_foreground),
-            border: Color::parse_hsl(&config.border),
-            input: Color::parse_hsl(&config.input),
-            ring: Color::parse_hsl(&config.ring),
+            background: Color::parse_hsl_compact(&config.background),
+            foreground: Color::parse_hsl_compact(&config.foreground),
+            primary: Color::parse_hsl_compact(&config.primary),
+            primary_foreground: Color::parse_hsl_compact(&config.primary_foreground),
+            secondary: Color::parse_hsl_compact(&config.secondary),
+            secondary_foreground: Color::parse_hsl_compact(&config.secondary_foreground),
+            muted: Color::parse_hsl_compact(&config.muted),
+            muted_foreground: Color::parse_hsl_compact(&config.muted_foreground),
+            accent: Color::parse_hsl_compact(&config.accent),
+            accent_foreground: Color::parse_hsl_compact(&config.accent_foreground),
+            destructive: Color::parse_hsl_compact(&config.destructive),
+            destructive_foreground: Color::parse_hsl_compact(&config.destructive_foreground),
+            border: Color::parse_hsl_compact(&config.border),
+            input: Color::parse_hsl_compact(&config.input),
+            ring: Color::parse_hsl_compact(&config.ring),
         }
     }
 }

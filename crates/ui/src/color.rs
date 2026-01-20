@@ -1,6 +1,7 @@
 // crates/ui/src/color.rs
 
 use gpui::{hsla, rgba, Hsla, Rgba};
+use std::str::FromStr;
 
 /// Flutter-style Color type that can be created from multiple formats
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -80,13 +81,13 @@ impl Color {
         }
     }
 
+    // ============================================
+    // Internal parsing helpers
+    // ============================================
+
     /// Parse HSL string "hue saturation% lightness%" to Color
-    ///
-    /// # Example
-    /// ```
-    /// let color = Color::parse_hsl("222 47% 11%");
-    /// ```
-    pub fn parse_hsl(hsl_str: &str) -> Self {
+    /// Used internally for theme parsing
+    pub(crate) fn parse_hsl_compact(hsl_str: &str) -> Self {
         let parts: Vec<&str> = hsl_str.split_whitespace().collect();
 
         if parts.len() != 3 {
@@ -99,36 +100,6 @@ impl Color {
         let lightness: f32 = parts[2].trim_end_matches('%').parse().unwrap_or(0.0);
 
         Self::from_hsl(hue, saturation, lightness)
-    }
-
-    /// Try to parse a color string (supports #hex, hsl(), rgb(), named colors)
-    ///
-    /// # Example
-    /// ```
-    /// let red = Color::try_parse("#ff0000").unwrap();
-    /// let blue = Color::try_parse("hsl(240, 100%, 50%)").unwrap();
-    /// let green = Color::try_parse("green").unwrap();
-    /// ```
-    pub fn try_parse(s: &str) -> Result<Self, ColorParseError> {
-        let s = s.trim();
-
-        // Hex color: #RRGGBB or #RGB
-        if s.starts_with('#') {
-            return Self::parse_hex_string(&s[1..]);
-        }
-
-        // HSL format: hsl(h, s%, l%) or h s% l%
-        if s.starts_with("hsl(") || s.contains('%') {
-            return Self::parse_hsl_function(s);
-        }
-
-        // RGB format: rgb(r, g, b)
-        if s.starts_with("rgb(") {
-            return Self::parse_rgb_function(s);
-        }
-
-        // Named color
-        Self::parse_named_color(s)
     }
 
     /// Parse hex string (without #)
@@ -165,7 +136,24 @@ impl Color {
             .trim_end_matches(')')
             .replace(',', " ");
 
-        Ok(Self::parse_hsl(&s))
+        let parts: Vec<&str> = s.split_whitespace().collect();
+        if parts.len() != 3 {
+            return Err(ColorParseError::InvalidFormat);
+        }
+
+        let hue: f32 = parts[0]
+            .parse()
+            .map_err(|_| ColorParseError::InvalidNumber)?;
+        let saturation: f32 = parts[1]
+            .trim_end_matches('%')
+            .parse()
+            .map_err(|_| ColorParseError::InvalidNumber)?;
+        let lightness: f32 = parts[2]
+            .trim_end_matches('%')
+            .parse()
+            .map_err(|_| ColorParseError::InvalidNumber)?;
+
+        Ok(Self::from_hsl(hue, saturation, lightness))
     }
 
     /// Parse rgb() function format
@@ -595,9 +583,44 @@ impl std::fmt::Display for ColorParseError {
 impl std::error::Error for ColorParseError {}
 
 // ============================================
-// Trait implementations for easy conversion
+// Standard Rust trait implementations
 // ============================================
 
+/// FromStr is the idiomatic way to parse strings in Rust
+///
+/// # Example
+/// ```
+/// use std::str::FromStr;
+/// let color = Color::from_str("#ff0000")?;
+/// let color: Color = "blue".parse()?;  // even more idiomatic!
+/// ```
+impl FromStr for Color {
+    type Err = ColorParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let s = s.trim();
+
+        // Hex color: #RRGGBB or #RGB
+        if s.starts_with('#') {
+            return Self::parse_hex_string(&s[1..]);
+        }
+
+        // HSL format: hsl(h, s%, l%) or h s% l%
+        if s.starts_with("hsl(") || s.contains('%') {
+            return Self::parse_hsl_function(s);
+        }
+
+        // RGB format: rgb(r, g, b)
+        if s.starts_with("rgb(") {
+            return Self::parse_rgb_function(s);
+        }
+
+        // Named color
+        Self::parse_named_color(s)
+    }
+}
+
+// Conversions from GPUI types
 impl From<Color> for Hsla {
     fn from(color: Color) -> Self {
         color.inner
@@ -628,41 +651,6 @@ impl From<Rgba> for Color {
 impl From<&Color> for Hsla {
     fn from(color: &Color) -> Self {
         color.inner
-    }
-}
-
-// String conversions
-impl From<String> for Color {
-    fn from(s: String) -> Self {
-        Self::try_parse(&s).unwrap_or_else(|_| {
-            eprintln!("Failed to parse color '{}', using black", s);
-            Self::black()
-        })
-    }
-}
-
-impl From<&str> for Color {
-    fn from(s: &str) -> Self {
-        Self::try_parse(s).unwrap_or_else(|_| {
-            eprintln!("Failed to parse color '{}', using black", s);
-            Self::black()
-        })
-    }
-}
-
-impl TryFrom<String> for Color {
-    type Error = ColorParseError;
-
-    fn try_from(s: String) -> Result<Self, Self::Error> {
-        Self::try_parse(&s)
-    }
-}
-
-impl TryFrom<&str> for Color {
-    type Error = ColorParseError;
-
-    fn try_from(s: &str) -> Result<Self, Self::Error> {
-        Self::try_parse(s)
     }
 }
 
@@ -722,8 +710,8 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_hsl() {
-        let color = Color::parse_hsl("222 47% 11%");
+    fn test_parse_hsl_compact() {
+        let color = Color::parse_hsl_compact("222 47% 11%");
         let hsla = color.to_hsla();
         // hue: 222/360 = 0.617
         // sat: 47% = 0.47
@@ -735,35 +723,36 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_hex_string() {
-        let red = Color::try_parse("#ff0000").unwrap();
+    fn test_from_str_hex() {
+        let red = Color::from_str("#ff0000").unwrap();
         let rgba = red.to_rgba();
         assert!((rgba.r - 1.0).abs() < 0.01);
     }
 
     #[test]
-    fn test_parse_short_hex() {
-        let red = Color::try_parse("#f00").unwrap();
+    fn test_from_str_short_hex() {
+        let red = Color::from_str("#f00").unwrap();
         let rgba = red.to_rgba();
         assert!((rgba.r - 1.0).abs() < 0.01);
     }
 
     #[test]
-    fn test_parse_rgb_function() {
-        let red = Color::try_parse("rgb(255, 0, 0)").unwrap();
+    fn test_from_str_rgb_function() {
+        let red = Color::from_str("rgb(255, 0, 0)").unwrap();
         let rgba = red.to_rgba();
         assert!((rgba.r - 1.0).abs() < 0.01);
     }
 
     #[test]
-    fn test_parse_named_color() {
-        let red = Color::try_parse("red").unwrap();
+    fn test_from_str_named_color() {
+        let red = Color::from_str("red").unwrap();
         assert_eq!(red, Color::red());
     }
 
     #[test]
-    fn test_from_string() {
-        let red: Color = "#ff0000".into();
+    fn test_parse_idiomatic() {
+        // The most idiomatic Rust way!
+        let red: Color = "#ff0000".parse().unwrap();
         let rgba = red.to_rgba();
         assert!((rgba.r - 1.0).abs() < 0.01);
     }
