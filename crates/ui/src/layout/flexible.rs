@@ -45,9 +45,22 @@ impl Flexible {
 
 impl RenderOnce for Flexible {
     fn render(self, _window: &mut Window, _cx: &mut App) -> impl IntoElement {
+        let mut element = div();
+
+        // Set flex-grow value directly via style()
+        element.style().flex_grow = Some(self.flex as f32);
+
         match self.fit {
-            FlexFit::Loose => div().flex_grow().child(self.child),
-            FlexFit::Tight => div().flex_1().child(self.child),
+            FlexFit::Loose => {
+                // Loose: just flex-grow
+                element.child(self.child)
+            }
+            FlexFit::Tight => {
+                // Tight: flex-grow + flex-basis 0 + flex-shrink 1
+                element.style().flex_basis = Some(px(0.).into());
+                element.style().flex_shrink = Some(1.0);
+                element.child(self.child)
+            }
         }
     }
 }
@@ -75,6 +88,13 @@ impl Expanded {
 
 impl RenderOnce for Expanded {
     fn render(self, _window: &mut Window, _cx: &mut App) -> impl IntoElement {
-        div().flex_1().child(self.child)
+        let mut element = div();
+
+        // Set flex properties directly
+        element.style().flex_grow = Some(self.flex as f32);
+        element.style().flex_shrink = Some(1.0);
+        element.style().flex_basis = Some(px(0.).into());
+
+        element.child(self.child)
     }
 }
