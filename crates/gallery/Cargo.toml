@@ -1,0 +1,16 @@
+[package]
+name = "gpui-flutter-gallery"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+gpui.workspace = true
+gpui-flutter = { path = "../ui" }
+
+[[bin]]
+name = "gallery"
+path = "src/main.rs"
